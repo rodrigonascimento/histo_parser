@@ -1,0 +1,14 @@
+/bin/
+/include/
+/lib/
+/awr.1threads.6users.75reads.txt
+/awr.4threads.6users.75reads.txt
+/awr.8threads.6users.75reads.txt
+/awr.12threads.6users.75reads.txt
+/awr.16threads.6users.75reads.txt
+/awr.20threads.6users.75reads.txt
+/awr.20threads.6users.75reads.txt.orig
+/awr.24threads.6users.75reads.txt
+/histogram_total_waits_summary.csv
+/histogram_up_to_32ms_summary.csv
+/pyvenv.cfg
