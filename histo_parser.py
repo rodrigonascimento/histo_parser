@@ -54,9 +54,18 @@ def get_histogram(awr_file=None, histo_type=None, wait_event=None):
                         lt['phase2'] = False
 
             if lt['phase1'] and lt['phase2'] and re.match(wait_event, awr_line):
+                # Converting the number of event
+                num_events = awr_line[26:32].strip()
+                if num_events[-1:] == 'K':
+                    num_events = float(num_events[:-1]) * 1000
+                elif num_events[-1:] == 'M':
+                    num_events = float(num_events[:-1]) * 1000000
+                elif num_events[-1:] == 'G':
+                    num_events = float(num_events[:-1]) * 1000000000
+
                 if histo_type == 'Wait Event Histogram':
                     histo['Event'] = awr_line[:25].strip()
-                    histo['Waits'] = awr_line[26:32].strip()
+                    histo['Waits'] = str(num_events)
                     histo['<8us'] = awr_line[33:38].strip()
                     histo['<16us'] = awr_line[39:44].strip()
                     histo['<32us'] = awr_line[45:50].strip()
@@ -70,7 +79,7 @@ def get_histogram(awr_file=None, histo_type=None, wait_event=None):
                     continue
                 elif histo_type == 'Wait Event Histogram \(up to 32 ms\)':
                     histo['Event'] = awr_line[:25].strip()
-                    histo['32m'] = awr_line[26:32].strip()
+                    histo['32m'] = str(num_events)
                     histo['<512'] = awr_line[33:38].strip()
                     histo['<1ms'] = awr_line[39:44].strip()
                     histo['<2ms'] = awr_line[45:50].strip()
