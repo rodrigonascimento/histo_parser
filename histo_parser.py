@@ -3,7 +3,7 @@
 import argparse
 import re
 import json
-from os import path
+import os
 
 
 def read_awr_file(fn=None):
@@ -17,7 +17,7 @@ def read_awr_file(fn=None):
 
 
 def get_awr_file_basedir(awr_file=None):
-    basedir = path.dirname(path.abspath(awr_file))
+    basedir = os.path.dirname(os.path.abspath(awr_file))
     return basedir
 
 
@@ -140,11 +140,17 @@ def main():
 
     if cli_args.get_histo:
         header_added = False
+        output_file_removed = False
+
         for awr_file in cli_args.awr_files_list:
             awr = read_awr_file(fn=awr_file)
             if awr != None:
                 output_fbd = get_awr_file_basedir(awr_file=awr_file)
                 output_fn = output_fbd + '/histogram_' +  cli_args.get_histo + '_summary.csv'
+                if os.path.exists(output_fn) and output_file_removed == False:
+                    os.remove(output_fn)
+                    output_file_removed = True
+
                 with open(output_fn, 'a+') as out_fd:
                     for event in wait_event_list['wait_events']:
                         if cli_args.get_histo == 'total_waits':
