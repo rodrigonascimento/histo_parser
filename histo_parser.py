@@ -3,18 +3,17 @@
 import argparse
 import re
 
-def openAWRFile(fn=None):
-    with open(fn, 'r') as awr_fh:
-        awrf = awr_fh.readlines()
-    return awrf
-
-
-def get_histogram(awr_file=None, histo_type=None, wait_event=None):
+def readAWRFile(fn=None):
     try:
-        awr = openAWRFile(fn=awr_file)
+        with open(fn, 'r') as awr_fh:
+            awrf = awr_fh.readlines()
+        return awrf
     except FileNotFoundError as e:
         print('Error: ' + e.filename + ' not found.')
+        return None
 
+
+def get_histogram(awr=None, histo_type=None, wait_event=None):
     # -- line_tracking (lt)
     # lt will be used to tell the parser if it is in the section of the text file that contains the histogram
     # that we are looking for.
@@ -126,22 +125,23 @@ def main():
         output_fn = 'histogram_' + cli_args.get_histo + '_summary.csv'
         with open(output_fn, 'w') as out_fd:
             for awr_file in cli_args.awr_files_list:
-                for event in wait_event_list:
-                    if cli_args.get_histo == 'total_waits':
-                        histogram = get_histogram(awr_file=awr_file, histo_type='Wait Event Histogram',
-                                                  wait_event=event)
-                    elif cli_args.get_histo == 'up_to_32ms':
-                        histogram = get_histogram(awr_file=awr_file, histo_type='Wait Event Histogram \\(up to 32 ms\\)',
-                                                  wait_event=event)
-                    if not header_added:
-
-                        header = ','.join(histogram.keys())
-                        header += ',Filename'
-                        header_added = True
-                        out_fd.write(header + '\n')
-                    output_line = ','.join(histogram.values())
-                    output_line += ',' + awr_file
-                    out_fd.write(output_line + '\n')
+                awr = readAWRFile(fn=awr_file)
+                if awr != None:
+                    for event in wait_event_list:
+                        if cli_args.get_histo == 'total_waits':
+                            histogram = get_histogram(awr=awr, histo_type='Wait Event Histogram',
+                                                      wait_event=event)
+                        elif cli_args.get_histo == 'up_to_32ms':
+                            histogram = get_histogram(awr=awr, histo_type='Wait Event Histogram \\(up to 32 ms\\)',
+                                                      wait_event=event)
+                        if not header_added:
+                            header = ','.join(histogram.keys())
+                            header += ',Filename'
+                            header_added = True
+                            out_fd.write(header + '\n')
+                        output_line = ','.join(histogram.values())
+                        output_line += ',' + awr_file
+                        out_fd.write(output_line + '\n')
 
 
 if __name__ == '__main__':
