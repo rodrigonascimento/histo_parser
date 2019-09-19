@@ -1,0 +1,6 @@
+{
+  "wait_events" : [
+    "db file sequential read",
+    "log file parallel write"
+  ]
+}

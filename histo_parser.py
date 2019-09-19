@@ -2,8 +2,11 @@
 
 import argparse
 import re
+import json
+from os import path
 
-def readAWRFile(fn=None):
+
+def read_awr_file(fn=None):
     try:
         with open(fn, 'r') as awr_fh:
             awrf = awr_fh.readlines()
@@ -11,6 +14,11 @@ def readAWRFile(fn=None):
     except FileNotFoundError as e:
         print('Error: ' + e.filename + ' not found.')
         return None
+
+
+def get_awr_file_basedir(awr_file=None):
+    basedir = path.dirname(path.abspath(awr_file))
+    return basedir
 
 
 def get_histogram(awr=None, histo_type=None, wait_event=None):
@@ -95,20 +103,30 @@ def get_histogram(awr=None, histo_type=None, wait_event=None):
     return histo
 
 
-def getCmdArgs():
+def get_list_wait_events(json_file=None):
+    try:
+        with open(json_file, 'r') as jsoncfg:
+            owe = json.load(jsoncfg)
+        return owe
+    except FileNotFoundError as e:
+        print('Error: ' + e.filename + ' not found.')
+        return None
+
+
+def get_cmd_args():
     oap_args = argparse.ArgumentParser(description='Oracle AWR Parser')
     oap_args.add_argument('--get-histo', choices=['total_waits', 'up_to_32ms'], help='Returns Wait Event Histograms')
+    oap_args.add_argument('--wait-events', type=str, default='wait_events.json', required=True, help='JSON file listing wait events')
     oap_args.add_argument('--awr', nargs='+', dest='awr_files_list', required=True, help='List of AWR files to be parsed')
     return oap_args.parse_args()
 
 
 def main():
-    cli_args = getCmdArgs()
+    cli_args = get_cmd_args()
 
-    wait_event_list = [
-        'db file sequential read',
-        'log file parallel write'
-    ]
+    wait_event_list = get_list_wait_events(json_file=cli_args.wait_events)
+    if wait_event_list == None:
+        exit(1)
 
     #
     # -- Note: There are two possible options for histo_type:
@@ -122,12 +140,13 @@ def main():
 
     if cli_args.get_histo:
         header_added = False
-        output_fn = 'histogram_' + cli_args.get_histo + '_summary.csv'
-        with open(output_fn, 'w') as out_fd:
-            for awr_file in cli_args.awr_files_list:
-                awr = readAWRFile(fn=awr_file)
-                if awr != None:
-                    for event in wait_event_list:
+        for awr_file in cli_args.awr_files_list:
+            awr = read_awr_file(fn=awr_file)
+            if awr != None:
+                output_fbd = get_awr_file_basedir(awr_file=awr_file)
+                output_fn = output_fbd + '/histogram_' +  cli_args.get_histo + '_summary.csv'
+                with open(output_fn, 'a+') as out_fd:
+                    for event in wait_event_list['wait_events']:
                         if cli_args.get_histo == 'total_waits':
                             histogram = get_histogram(awr=awr, histo_type='Wait Event Histogram',
                                                       wait_event=event)
