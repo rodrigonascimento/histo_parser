@@ -145,8 +145,14 @@ def main():
         for awr_file in cli_args.awr_files_list:
             awr = read_awr_file(fn=awr_file)
             if awr != None:
+                if header_added:
+                    if output_fbd != get_awr_file_basedir(awr_file=awr_file):
+                        header_added = False
+                        output_file_removed = False
+
                 output_fbd = get_awr_file_basedir(awr_file=awr_file)
                 output_fn = output_fbd + '/histogram_' +  cli_args.get_histo + '_summary.csv'
+
                 if os.path.exists(output_fn) and output_file_removed == False:
                     os.remove(output_fn)
                     output_file_removed = True
@@ -159,11 +165,13 @@ def main():
                         elif cli_args.get_histo == 'up_to_32ms':
                             histogram = get_histogram(awr=awr, histo_type='Wait Event Histogram \\(up to 32 ms\\)',
                                                       wait_event=event)
+
                         if not header_added:
                             header = ','.join(histogram.keys())
                             header += ',Filename'
                             header_added = True
                             out_fd.write(header + '\n')
+
                         output_line = ','.join(histogram.values())
                         output_line += ',' + awr_file
                         out_fd.write(output_line + '\n')
